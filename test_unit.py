@@ -55,7 +55,9 @@ try:
 except Exception:
     FASTAPI_AVAILABLE = False
 
-from doctor import app as doctor_app
+doctor_app = None
+if FASTAPI_AVAILABLE:
+    from doctor import app as doctor_app
 from doctor.config import cfg
 
 @unittest.skipUnless(FASTAPI_AVAILABLE, "fastapi not installed")
