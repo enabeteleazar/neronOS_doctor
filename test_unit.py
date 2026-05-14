@@ -49,10 +49,16 @@ class FixerTests(unittest.TestCase):
             self.assertTrue(any(r.get('ok') for r in res))
 
 # New security tests
-from fastapi.testclient import TestClient
+try:
+    from fastapi.testclient import TestClient
+    FASTAPI_AVAILABLE = True
+except Exception:
+    FASTAPI_AVAILABLE = False
+
 from doctor import app as doctor_app
 from doctor.config import cfg
 
+@unittest.skipUnless(FASTAPI_AVAILABLE, "fastapi not installed")
 class SecurityTests(unittest.TestCase):
     def test_config_masks_api_key(self):
         # enable auth and set a known API key
