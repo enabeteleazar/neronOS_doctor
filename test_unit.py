@@ -73,5 +73,26 @@ class SecurityTests(unittest.TestCase):
         self.assertNotEqual(data["API_KEY"], "supersecret")
         self.assertTrue("MASKED" in str(data["API_KEY"]))
 
+
+    def test_logger_masks_api_key(self):
+        import io, logging
+        from doctor.logger import RedactingFilter
+        # set api key
+        cfg.API_KEY = "topsecret"
+        buf = io.StringIO()
+        handler = logging.StreamHandler(buf)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        handler.addFilter(RedactingFilter())
+        logger = logging.getLogger("test.redact")
+        # ensure isolated handlers
+        logger.handlers = []
+        logger.setLevel(logging.INFO)
+        logger.addHandler(handler)
+        logger.info("api key is %s", cfg.API_KEY)
+        handler.flush()
+        out = buf.getvalue()
+        self.assertNotIn("topsecret", out)
+        self.assertIn("***MASKED***", out)
+
 if __name__ == '__main__':
     unittest.main()
