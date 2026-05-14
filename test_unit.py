@@ -48,5 +48,22 @@ class FixerTests(unittest.TestCase):
             res = fixer.apply_fixes(report)
             self.assertTrue(any(r.get('ok') for r in res))
 
+# New security tests
+from fastapi.testclient import TestClient
+from doctor import app as doctor_app
+from doctor.config import cfg
+
+class SecurityTests(unittest.TestCase):
+    def test_config_masks_api_key(self):
+        # enable auth and set a known API key
+        cfg.API_KEY = "supersecret"
+        client = TestClient(doctor_app.app)
+        res = client.get("/config", headers={"X-Doctor-Key": "supersecret"})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIn("API_KEY", data)
+        self.assertNotEqual(data["API_KEY"], "supersecret")
+        self.assertTrue("MASKED" in str(data["API_KEY"]))
+
 if __name__ == '__main__':
     unittest.main()
